@@ -48,16 +48,28 @@ for i in range(len(E)):
 """Theory model/etc"""
 time=1347*24*60*60  #total IceCube sample time
 
-"""POWER LAW"""
-def P(e):  # of unit s-1 cm-2
-    g=2.476
-    n=1.84e-18  
+"""2 POWER LAW
+best phi = 2.575
+gamma<1PeV= 2.88
+gamma>PeV=2.6
+
+"""  
+
+def P1(e):  # of unit s-1 cm-2
+    g=3  #1PeV
+    n=2.5e-18  
+    p=n*((e/1e5)**(-g))
+    return p
+    
+def P2(e): 
+    g=3.2  #>PeV
+    n=28.5e-18  
     p=n*((e/1e5)**(-g))
     return p
     
 def Q(e):
     g=2
-    n=0.62e-18 ##phi best fit from IceCube
+    n=0.64e-18 ##phi best fit from IceCube
     p=n*((e/1e5)**(-g))
     return p
     
@@ -138,9 +150,13 @@ for x in range(0,7):
 
 for x in range(0,8):
     area[x*2-1]=area[x*2-1]*1/3
-    
 
-theory=P(et2)*time*4*m.pi*area*1e4*(et2-et1)+bkmuon+bkatm+atmnu
+theory=[]
+for i in range(0,len(et2)):
+    if et2[i] <= 1e6:
+        theory.append(P1(et2[i])*time*4*np.pi*area[i]*1e4*(et2[i]-et1[i])+bkmuon[i]+bkatm[i]+atmnu[i])
+    if et2[i] > 1e6:
+        theory.append(P2(et2[i])*time*4*np.pi*area[i]*1e4*(et2[i]-et1[i])+bkmuon[i]+bkatm[i]+atmnu[i])
 theoryh=Q(et2)*time*4*m.pi*area*1e4*(et2-et1)+bkmuon+bkatm+atmnu
 
 ###plotting
@@ -158,23 +174,29 @@ pl.xlim(10**4.2,1e7)
 pl.ylim(10**-1.5,1e2)
 pl.legend()
 pl.show()
-pl.subplot() #effective area
-pl.loglog()
-pl.step(e2,e3,label=r'$\nu_e$')
-pl.step(m2,m3,label=r'$\nu_\mu$')
-pl.step(t2,t3,label=r'$\nu_\tau$')
-pl.step(et2,area,label='total')
-pl.xlabel('Energy Deposited, GeV')
-pl.ylabel(r'Effective area, $m^2$')
-pl.legend(loc=4)
-pl.show()
+#pl.subplot() #effective area
+#pl.loglog()
+#pl.step(e2,e3,label=r'$\nu_e$')
+#pl.step(m2,m3,label=r'$\nu_\mu$')
+#pl.step(t2,t3,label=r'$\nu_\tau$')
+#pl.step(et2,area,label='total')
+#pl.xlabel('Energy Deposited, GeV')
+#pl.ylabel(r'Effective area, $m^2$')
+#pl.legend(loc=4)
+#pl.show()
 
 bkmuon2=bkmuon*(et2-et1)/(time*4*m.pi*area*1e4)
 bkatm2=bkatm*(et2-et1)/(time*4*m.pi*area*1e4)
 atmnu2=atmnu*(et2-et1)/(time*4*m.pi*area*1e4)
-theory2=P(et2)*(et2-et1)**2+bkmuon2+bkatm2+atmnu2
+theory2=[]
 theoryh2=Q(et2)*(et2-et1)**2+bkmuon2+bkatm2+atmnu2
 obs=bins*(et2-et1)/(time*4*m.pi*area*1e4)
+
+for i in range(0,len(et2)):
+    if et2[i] <= 1e6:
+        theory2.append(P1(et2[i])*(et2[i]-et1[i])**2+bkmuon2[i]+bkatm2[i]+atmnu2[i])
+    if et2[i] > 1e6:
+        theory2.append(P2(et2[i])*(et2[i]-et1[i])**2+bkmuon2[i]+bkatm2[i]+atmnu2[i])
 
 pl.subplot() 
 pl.loglog()
@@ -192,29 +214,29 @@ pl.ylim(1e-12,1e-6)
 pl.legend()
 pl.show()
 
-"""Computation of chi-2"""
-
-#traditional chi squared
-kai=((bins-theory)*(bins-theory))/theory
-print("chi squared value")
-print(kai)
-print("sum",sum(kai),'14 energy bins')
-
-pvalue=[]
-for i in range(0,len(bins)):
-    if bins[i]==0:
-        chi=m.exp(-theory[i])
-    else:
-        chi=m.exp(bins[i]-theory[i])*((theory[i]/bins[i])**bins[i]) #as in papares
-    pvalue.append(chi)
-value=np.array(pvalue)
-twice=-2*np.log(value)
-print("p-value")
-print(twice)
-print("mean p", sum(twice),'14 bins')
-
-import scipy as sp
-Pchi=theory**bins*np.exp(-theory)/(sp.misc.factorial(bins))
-print("poissonian probabilty in each bin")
-print(Pchi)
-print("mean probability =",np.mean(Pchi))
+#"""Computation of chi-2"""
+#
+##traditional chi squared
+#kai=((bins-theory)*(bins-theory))/theory
+#print("chi squared value")
+#print(kai)
+#print("sum",sum(kai),'14 energy bins')
+#
+#pvalue=[]
+#for i in range(0,len(bins)):
+#    if bins[i]==0:
+#        chi=m.exp(-theory[i])
+#    else:
+#        chi=m.exp(bins[i]-theory[i])*((theory[i]/bins[i])**bins[i]) #as in papares
+#    pvalue.append(chi)
+#value=np.array(pvalue)
+#twice=-2*np.log(value)
+#print("p-value")
+#print(twice)
+#print("mean p", sum(twice),'14 bins')
+#
+#import scipy as sp
+#Pchi=theory**bins*np.exp(-theory)/(sp.misc.factorial(bins))
+#print("poissonian probabilty in each bin")
+#print(Pchi)
+#print("mean probability =",np.mean(Pchi))

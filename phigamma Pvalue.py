@@ -5,6 +5,7 @@ Created on Thu Oct 22 13:42:18 2015
 @author: hareyakana
 """
 import matplotlib.pylab as pl
+from matplotlib import mlab,cm
 #import time 
 import math as m
 import numpy as np
@@ -24,11 +25,11 @@ E=np.array([47.6, 117, 78.7, 165.4, 71.4, 28.4, 34.3, 32.6, 63.2, 97.2, 88.4, 10
 e=E*1000.
 
 """Background"""
-bkmuoni=np.array([0,0.05,1.1,0.6,0.33,-10,-10,-10,-10,-10,-10,-10,-10,-10,-10])
+bkmuoni=np.array([0,0.1,1.1,0.6,0.33,-10,-10,-10,-10,-10,-10,-10,-10,-10,-10])
 bkmuon=10**bkmuoni
-bkatmi=np.array([0,0,0.35,0.34,0.25,-0.1,-0.6,-1.1,-1.9,-10,-10,-10,-10,-10,-10])
+bkatmi=np.array([0,0,0.35,0.345,0.25,-0.1,-0.6,-1.1,-1.9,-10,-10,-10,-10,-10,-10])
 bkatm=10**bkatmi
-atm=np.array([0,0.2,0.62,0.75,0.72,0.48,0.2,-0.3,-0.65,-1.1,-1.52,-10,-10,-10,-10])
+atm=np.array([0,0.15,0.62,0.75,0.72,0.48,0.2,-0.3,-0.65,-1.1,-1.52,-10,-10,-10,-10])
 atmnu=10**atm
 background=bkmuon+bkatm+atmnu
 #####
@@ -36,7 +37,6 @@ ET1=np.linspace(4.0,6.8,num=15)
 ET2=np.linspace(4.2,7.0,num=15)
 et1=10**ET1
 et2=10**ET2
-ET=np.linspace(4.1,6.9,num=15)
 et=(et1+et2)/2
 
 
@@ -53,31 +53,18 @@ time=1347*24*60*60  #total IceCube sample time
 """POWER LAW"""
 
 def P(E,n,g,e,a,bk):  # of unit s-1 cm-2
-    p=n*1e-18*((E/1e5)**-g)
-    g=p*time*4*m.pi*a*1e4*(E-e)+bk
-    return g
+    p=n*1e-18*(((E)/1e5)**-g)
+    f=p*time*4*m.pi*a*1e4*(E-e)+bk
+    return f
     
-#PROM/CONVENTIONAL SAME FORMULA BUT DIFFERENT PARAMETER
-#th=P(et)*time*4*m.pi
 
 
 """Effective area"""
-#ae=np.array([])
-#am=np.array([])
-#at=np.array([])
-
 """from public data"""
 import csv
 e1=[]
 e2=[]
 e3=[]
-
-#with open('effective_area.nu_e.txt','r')as f:
-#    for row in f:
-#        x,y,h,k,z,p=row.split()
-#        e1.append(float(x))
-#        e2.append(float(y))
-#        e3.append(float(z))
 
 with open('nue_4pi.txt','r')as f:
     reader=csv.DictReader(f)
@@ -90,13 +77,6 @@ m1=[]
 m2=[]
 m3=[]
 
-#with open('effective_area.nu_mu.txt','r')as f:
-#    for row in f:
-#        x,y,h,k,z,p=row.split()
-#        m1.append(float(x))
-#        m2.append(float(y))
-#        m3.append(float(z))
-
 with open('numu_4pi.txt','r')as f:
     reader=csv.DictReader(f)
     for row in reader:
@@ -108,13 +88,6 @@ t1=[]
 t2=[]
 t3=[]
 
-#with open('effective_area.nu_tau.txt','r')as f:
-#    for row in f:
-#        x,y,h,k,z,p=row.split()
-#        t1.append(float(x))
-#        t2.append(float(y))
-#        t3.append(float(z))
-
 with open('nutau_4pi.txt','r')as f:
     reader=csv.DictReader(f)
     for row in reader:
@@ -124,70 +97,41 @@ with open('nutau_4pi.txt','r')as f:
 
 """"""        
 area=np.zeros(len(et1),dtype=float)
-repeat=np.zeros(len(et1),dtype=float)
 
 for i in range(len(et1)):
     for k in range(len(e1)):
         if abs(e2[k])>abs(et1[i]) and abs(e2[k])<abs(et2[i]):
             area[i]=area[i]+e3[k]
-            repeat[i]=repeat[i]+1
         if abs(m2[k])>abs(et1[i]) and abs(m2[k])<abs(et2[i]):
             area[i]=area[i]+m3[k]
-            repeat[i]=repeat[i]+1
         if abs(t2[k])>abs(et1[i]) and abs(t2[k])<abs(et2[i]):
             area[i]=area[i]+t3[k]
-            repeat[i]=repeat[i]+1
 
-for x in range(0,7):
-    area[2*x]=area[2*x]*2.5/2.
+for x in range(0,round(len(area)/2-.9)):
+    area[2*x]=area[2*x]*3/5.
 
-for x in range(0,8):
-    area[x*2-1]=area[x*2-1]*2.5/3.
+for x in range(0,round(len(area)/2)):
+    area[x*2-1]=area[x*2-1]*2/5.
     
 #########################
 """best fit parameter"""
 #bins[-4]=bins[-5]=0
 
-#phi=2.2 #normalization index=8.4, astro flux=2.2
-#gam=np.linspace(2,5,num=1001)
-#
-#test=[]
-#import scipy as sp
-#
-#for i in range(0,len(gam)):
-#    theory=P(et2,phi,gam[i])*time*4*np.pi*area*(et2-et1)+background
-#    chis=((bins-theory)*(bins-theory))/theory
-#    test.append(sum(chis))
-#    
-#pl.plot(gam,test)
-#pl.show()
-#print("minimum chi squared",min(test))
-#print("minimum spectral index gamma=",gam[test.index(min(test))])
-#
-#gamma=gam[test.index(min(test))]
-#flux=np.linspace(0,20,num=1001)
-#
-#test2=[]
-#for j in range(0,len(flux)):
-#    theory=P(et2,flux[j],gamma)*time*4*np.pi*area*(et2-et1)+background
-#    chis=((bins-theory)*(bins-theory))/theory
-#    test2.append(sum(chis))
-#    
-#pl.subplot
-#pl.plot(flux,test2)
-#pl.show()
-#print("minimum chi squared",min(test2))
-#print("minimum flux, phi=",flux[test2.index(min(test2))])
-    
 #########################
 #########################
-phi=np.linspace(0.1,10,num=501)
-gamma=np.linspace(2,4,num=501)
+phi=np.linspace(0,5,num=1001)
+gamma=np.linspace(2,3,num=1001)
+
+for i in range(0,len(bins)):
+    if bins[i]==0:
+        bins[i]=1e-20
 
 p,g=np.meshgrid(phi,gamma)
-
+#import scipy as sp
 def chi(observed,expected):
-    ch=(observed-expected)*(observed-expected)/expected   
+#    ch=(expected**observed)*np.exp(-expected)/(sp.misc.factorial(observed)) #poisson probabilty
+    ch=(np.exp(observed-expected))*((expected/observed)**observed)
+#    ch=-2*np.log(ch1)    
     return ch
 
 blank=[]
@@ -196,36 +140,63 @@ for i in range(0,len(et)):
     theory=chi(bins[i],theo)
     blank.append(theory)
 
-total=blank[0]+blank[1]+blank[2]+blank[3]+blank[4]+blank[5]+blank[6]+blank[7]+blank[8]+blank[9]+blank[10]+blank[11]+blank[12]+blank[13]+blank[14]
+total=np.zeros(shape=(len(phi),len(gamma)))
 
+for i in range(0,len(blank)):
+    total+=blank[i]
 import matplotlib.gridspec as gridspec
 
 h, w = total.shape
-gs = gridspec.GridSpec(2,2,width_ratios=[w,w*.2], height_ratios=[h,h*.2])
+gs = gridspec.GridSpec(2,2,width_ratios=[w,w*.1], height_ratios=[h,h*.1])
 ax = [pl.subplot(gs[0]),]
 ax.append(pl.subplot(gs[1], sharey=ax[0]))
 ax.append(pl.subplot(gs[2], sharex=ax[0]))
+ax.append(pl.subplot(gs[3]))
 bounds = [phi.min(),phi.max(),gamma.min(),gamma.max()]
 ax[0].imshow(total, cmap='Blues_r', extent=bounds,origin='lower')
 ax[1].plot(total[:,int(w/2)],g[:,int(w/2)],'.',total[:,int(w/2)],g[:,int(w/2)])
-#ax[1].axis([total[:,int(w/2)].max(), total[:,int(w/2)].min(), g.min(), g.max()])
+ax[1].axis([total[:,int(w/2)].max(), total[:,int(w/2)].min(), g.min(), g.max()])
 ax[2].plot(p[int(h/2),:],total[int(h/2),:],'.',p[int(h/2),:],total[int(h/2),:])
-pl.show()
-
 p1=[]
 invalue=[]
 x=[]
 y=[]
+test=[]
 
-
+def CHI(p):
+    return -2*np.log(1/p**2)
 
 for i in range(0,len(phi)):
     for k in range(0,len(gamma)):
         theory=P(et2,phi[i],gamma[k],et1,area,background)
         chisquared=chi(bins,theory)
-        p1.append(sum(chisquared))
+        p1.append(np.sum(chisquared))
         invalue.append([phi[i],gamma[k]])
         x.append(phi[i])
         y.append(gamma[k])
+        test.append(CHI(sum(chisquared)))
 
-print(invalue[p1.index(min(p1))],min(p1))
+ma=max(p1)/max(p1)
+mi=min(p1)/max(p1)
+levels=np.arange(mi,ma,(ma-mi)/3)
+z=total/max(p1)
+cax=ax[0].contour(z,levels,cmap='viridis',extent=bounds,origin='lower')
+cbar=pl.colorbar(cax,orientation='vertical')
+pl.tight_layout()
+pl.show()
+
+
+dummy=[]
+for i in range(0,len(phi)):
+    g=2.
+    th=P(et2,phi[i],g,et1,area,background)
+    ch=chi(bins,th)
+    k=sum(ch)
+    dummy.append(k)
+
+print("maximum phi, gamma for chi squared ")
+print("max phi=",x[p1.index(max(p1))],"max gamma=",
+      y[p1.index(max(p1))],max(p1),test[p1.index(max(p1))])
+
+print("gamma =2, max phi=",phi[dummy.index(max(dummy))])
+
